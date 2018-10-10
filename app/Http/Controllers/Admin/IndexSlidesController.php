@@ -35,6 +35,8 @@ class IndexSlidesController extends Controller
 		]);
 		
 		$indexSlide = new IndexSlide($formData);
+                
+                $indexSlide->order_number = IndexSlide::where('status', IndexSlide::STATUS_ENABLED)->count() + 1;
 		
 		$indexSlide->save();
 		
@@ -119,9 +121,16 @@ class IndexSlidesController extends Controller
 		
 		$indexSlide = IndexSlide::findOrFail($request->input('id'));
 		
-		
+		$oldOrderNumber = $indexSlide->order_number;
+                
 		//delete from database
 		$indexSlide->delete();
+                
+                $indexSlides = IndexSlide::where('status', IndexSlide::STATUS_ENABLED)
+                        ->where('order_number', '>', $oldOrderNumber)
+                        ->update([
+                    'order_number' => '`order_number` - 1'
+                ]);
 		
 		//see if photo file exists
 		if (
@@ -144,6 +153,8 @@ class IndexSlidesController extends Controller
             
             $indexSlide = IndexSlide::findOrFail($request->input('id'));
             
+            $indexSlide->order_number = IndexSlide::where('status', IndexSlide::STATUS_ENABLED)->count() + 1;
+            
             $indexSlide->status = IndexSlide::STATUS_ENABLED;
             
             $indexSlide->save();
@@ -158,6 +169,8 @@ class IndexSlidesController extends Controller
             
             $indexSlide = IndexSlide::findOrFail($request->input('id'));
             
+            $indexSlide->order_number = 0;
+            
             $indexSlide->status = IndexSlide::STATUS_DISABLED;
             
             $indexSlide->save();
@@ -165,5 +178,29 @@ class IndexSlidesController extends Controller
             return redirect()
                     ->route('admin.index-slides.index')
                     ->with('systemMessage', 'Slide has been disabled');
+        }
+        
+        public function reorder() {
+            
+            $request = request();
+            
+            $orderIds = $request->input('order_ids');
+            
+            $ids = explode(',', $orderIds);     
+            
+            // $ids = [1, 2, 3, 4];
+            
+            foreach ($ids as $key => $id) {
+                
+                $indexSlide = IndexSlide::findOrFail($id);
+                
+                $indexSlide->order_number = $key + 1;
+                
+                $indexSlide->save();
+            }
+            
+            return redirect()
+                    ->route('admin.index-slides.index')
+                    ->with('systemMessage', 'Slides have been reordered');
         }
 }

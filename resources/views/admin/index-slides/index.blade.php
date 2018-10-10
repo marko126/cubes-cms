@@ -22,9 +22,9 @@
                 Add Slide
             </a>
         </div>
-        <form action="" method="post" id="save-order-form" class="btn-group btn-group-sm float-right">
+        <form action="{{ route('admin.index-slides.reorder') }}" method="post" id="save-order-form" class="btn-group btn-group-sm float-right">
             {{csrf_field()}}
-            <input name="order_ids" value="">
+            <input type='hidden' name="order_ids" value="">
             <button type="button" class="btn btn-secondary" data-action="cancel-change-order">Cancel</button>
             <button type="submit" class="btn btn-success">Save Order</button>
         </form>
@@ -181,6 +181,7 @@
 @endsection
 
 @push('footer_javascript')
+<script src="{{ url('/skins/admin/vendor/jquery-ui/jquery-ui.min.js') }}" type="text/javascript"></script>
 <script>
     $('#records-table').on('click', '[data-action="delete"]', function (e) {
 
@@ -226,6 +227,21 @@
 
         disablePopup.modal('show');
     });
+    
+    $('#records-table tbody').sortable({
+        
+        update: function (e, ui) {
+            
+            var ids = $(this).sortable('toArray', {
+                attribute: 'data-id'
+            });
+            
+            $('#save-order-form [name="order_ids"]').val(ids.join(','));
+            
+        }
+        
+    });
 
 </script>
 @endpush
+
